@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "0 11 * * *" # 11:00 UTC = 18:00 Vietnam time
   workflow_dispatch:
 
 permissions:
@@ -18,17 +20,17 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm ci || npm install
-      - run: npx playwright install --with-deps chromium
+      - name: Install Microsoft Edge
+        run: npx playwright install msedge
       - run: npx playwright test
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: playwright-report
           path: playwright-report/
@@ -36,15 +38,15 @@ jobs:
 
   deploy:
     needs: test
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    if: always() && github.event_name != 'pull_request'
+    runs-on: windows-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4s
         with:
           path: site
       - id: deployment
