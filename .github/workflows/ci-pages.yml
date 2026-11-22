@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "08 9 * * *" # 11:00 UTC = 18:00 Vietnam time
+    - cron: "00 10 * * *" # 11:00 UTC = 17:00 Vietnam time
   workflow_dispatch:
 
 permissions:
