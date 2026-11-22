@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "30 13 * * *" # 13:15 UTC = 20:15 Vietnam time
+    - cron: "15 13 * * *" # 13:15 UTC = 20:15 Vietnam time
   workflow_dispatch:
 
 permissions:
@@ -24,12 +24,34 @@ jobs:
         shell: cmd
     steps:
       - uses: actions/checkout@v4
+        with:
+          clean: false # keep node_modules between runs on your laptop
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
-      - run: npx playwright install chromium
-      - run: npx playwright test
+          cache: npm
+
+      - name: Install packages (only if lock file changed)
+        shell: powershell
+        run: |
+          $hash = (Get-FileHash package-lock.json).Hash
+          $mark = "node_modules\.lock-hash"
+          if (!(Test-Path $mark) -or (Get-Content $mark) -ne $hash) {
+            npm ci
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+            Set-Content $mark $hash
+          } else { Write-Host "package-lock.json unchanged - skipping npm ci" }
+
+      - name: Install Chromium (only if missing)
+        run: if not exist "%LOCALAPPDATA%\ms-playwright\chromium-*" npx playwright install chromium
+
+      - name: Clean old results
+        run: if exist test-results rmdir /s /q test-results & if exist playwright-report rmdir /s /q playwright-report
+
+      - name: Run tests
+        run: npx playwright test --headed
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
