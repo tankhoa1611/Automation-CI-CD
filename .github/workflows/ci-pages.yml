@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "00 10 * * *" # 11:00 UTC = 17:00 Vietnam time
+    - cron: "15 13 * * *" # 13:15 UTC = 20:15 Vietnam time
   workflow_dispatch:
 
 permissions:
@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
